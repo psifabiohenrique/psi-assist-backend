@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Pacientes</title>
+</head>
+<body>
+    <h1>Meus Pacientes</h1>
+    <p><a href="{% url 'patients:create' %}">Adicionar Novo Paciente</a></p>
+    <ul>
+        {% for patient in patients %}
+            <li>
+                {{ patient.full_name }} ({{ patient.birth_date|date:"d/m/Y" }})
+                - <a href="{% url 'patients:detail' patient.pk %}">Ver Detalhes</a>
+                - <a href="{% url 'patients:update' patient.pk %}">Editar</a>
+                - <a href="{% url 'patients:delete' patient.pk %}">Excluir</a>
+            </li>
+        {% empty %}
+            <li>Você ainda não possui pacientes cadastrados.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'logout' %}">Sair</a></p>
+</body>
+</html>

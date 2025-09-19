@@ -16,8 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
 
 urlpatterns = [
+    path('/', include('patients.urls')),
     path('user/', include('user.urls')),
     path('admin/', admin.site.urls),
 ]
+
+def root_redirect(request):
+    return redirect('patients:list')

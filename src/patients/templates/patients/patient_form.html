@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if patient %}Editar Paciente{% else %}Novo Paciente{% endif %}</title>
+</head>
+<body>
+    <h1>{% if patient %}Editar Paciente{% else %}Novo Paciente{% endif %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <p>
+                {{ field.label_tag }}
+                {% if field.field.required %}
+                    <span style="color:red">*</span>
+                {% else %}
+                    <span style="color:red">(opicional)</span>
+                {% endif %}
+                <br>
+                
+                {{ field }}
+                {% if field.help_text %}
+                    <small style="color:gray">{{ field.help_text }}</small>
+                {% endif %}
+
+                {% if field.errors %}
+                    <ul style="color:red;">
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </p>
+        {% endfor %}
+        <button type="submit">Salvar</button>
+    </form>
+    <p><a href="{% url 'patients:list' %}">Voltar para a lista de pacientes</a></p>
+</body>
+</html>

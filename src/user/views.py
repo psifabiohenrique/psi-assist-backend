@@ -2,15 +2,16 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from .forms import CustomUserCreationForm, CustomAuthenticationForm # Importe seu CustomUserCreationForm
+from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from patients.views import PatientListView
 
 def signup_view(request):
     if request.method == "POST":
-        form = CustomUserCreationForm(request.POST) # Use seu CustomUserCreationForm
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect("dashboard")
+            return redirect("patients:list")
     else:
         form = CustomUserCreationForm()
     return render(request, "user/signup.html", {"form": form})
