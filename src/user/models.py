@@ -5,8 +5,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Create your models here.
-
 
 class User(AbstractUser):
     api_key = models.CharField(

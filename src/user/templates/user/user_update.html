@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Psi Assist</title>
+</head>
+
+<body>
+    <!-- Navegação -->
+    <p><a href="{% url 'patients:list' %}">&larr; Voltar para Lista de Pacientes</a></p>
+    <p>Quer alterar sua senha? <a href="{% url 'user:password_change' %}">Clique aqui</a></p>
+
+    <h1>{{ title }}</h1>
+
+    <!-- Status da API Key -->
+    {% if has_api_key %}
+    <p><strong>✓ API Key configurada:</strong> Você pode usar a geração automática de prontuários.</p>
+    {% else %}
+    <p><strong>⚠ API Key não configurada:</strong> Configure sua chave de API do Google Gemini para usar a geração
+        automática de prontuários.</p>
+    <p><small><a href="https://aistudio.google.com/app/apikey" target="_blank">Clique aqui para criar sua chave de API
+                do Google Gemini</a></small></p>
+    {% endif %}
+
+    <!-- Mensagens -->
+    {% if messages %}
+    {% for message in messages %}
+    <p><strong>{{ message.tags|title }}:</strong> {{ message }}</p>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Formulário -->
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Dados Pessoais -->
+        <h3>Dados Pessoais</h3>
+
+        <p>
+            <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}:</label><br>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
+            <br><strong>Erros:</strong>
+        <ul>
+            {% for error in form.first_name.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        </p>
+
+        <p>
+            <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}:</label><br>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+            <br><strong>Erros:</strong>
+        <ul>
+            {% for error in form.last_name.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        </p>
+
+        <p>
+            <label for="{{ form.email.id_for_label }}">{{ form.email.label }}:</label><br>
+            {{ form.email }}
+            {% if form.email.errors %}
+            <br><strong>Erros:</strong>
+        <ul>
+            {% for error in form.email.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        </p>
+
+        <!-- Configurações de IA -->
+        <h3>Configurações de IA</h3>
+
+        <p>
+            <label for="{{ form.api_key.id_for_label }}">{{ form.api_key.label }}:</label><br>
+            {{ form.api_key }}
+            {% if form.api_key.help_text %}
+            <br><small>{{ form.api_key.help_text }}</small>
+            {% endif %}
+            {% if form.api_key.errors %}
+            <br><strong>Erros:</strong>
+        <ul>
+            {% for error in form.api_key.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        </p>
+
+        <p>
+            <label for="{{ form.system_prompt.id_for_label }}">{{ form.system_prompt.label }}:</label><br>
+            {{ form.system_prompt }}
+            {% if form.system_prompt.help_text %}
+            <br><small>{{ form.system_prompt.help_text }}</small>
+            {% endif %}
+            {% if form.system_prompt.errors %}
+            <br><strong>Erros:</strong>
+        <ul>
+            {% for error in form.system_prompt.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        </p>
+
+        <!-- Botões -->
+        <p>
+            <button type="submit">Salvar Alterações</button>
+            <a href="{% url 'patients:list' %}"><button type="button">Cancelar</button></a>
+        </p>
+    </form>
+
+    <!-- Informações adicionais -->
+    <hr>
+    <h3>Informações Importantes</h3>
+    <ul>
+        <li><strong>API Key:</strong> Sua chave é armazenada de forma segura e usada apenas para gerar prontuários
+            automáticos.</li>
+        <li><strong>Prompt de Sistema:</strong> Personalize as instruções para o modelo de IA conforme sua abordagem
+            terapêutica.</li>
+        <li><strong>Segurança:</strong> Nunca compartilhe sua chave de API com terceiros.</li>
+    </ul>
+</body>
+
+</html>
