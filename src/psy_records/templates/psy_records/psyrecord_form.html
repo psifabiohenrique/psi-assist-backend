@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if record %}Editar Prontuário{% else %}Novo Prontuário{% endif %}</title>
+</head>
+<body>
+    <h1>{% if record %}Editar Prontuário{% else %}Novo Prontuário{% endif %}</h1>
+    <p><strong>Paciente:</strong> {{ patient.full_name }}</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar</button>
+    </form>
+
+    <p>
+        <a href="{% url 'patients:detail' patient.id %}">⬅ Voltar</a>
+    </p>
+</body>
+</html>

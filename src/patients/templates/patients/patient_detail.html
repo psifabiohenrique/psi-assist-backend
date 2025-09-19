@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalhes do Paciente: {{ patient.full_name }}</title>
 </head>
+
 <body>
     <h1>Detalhes do Paciente: {{ patient.full_name }}</h1>
     <p><strong>Nome Completo:</strong> {{ patient.full_name }}</p>
@@ -13,7 +15,27 @@
     <p>
         <a href="{% url 'patients:update' patient.pk %}">Editar Paciente</a> |
         <a href="{% url 'patients:delete' patient.pk %}">Excluir Paciente</a> |
-        <a href="{% url 'patients:list' %}">Voltar para a lista de pacientes</a>
+    </p>
+
+    <h2>Prontuários</h2>
+    <p><a href="{% url 'psy_records:create' patient.id %}">Novo Prontuário</a></p>
+    <ul>
+        {% for record in patient.psy_records.all %}
+        <li>
+            <a href="{% url 'psy_records:detail' patient.id record.id %}">
+                Registro nº {{ record.record_number }} - {{ record.date|date:"d/m/Y" }}
+            </a>
+            [<a href="{% url 'psy_records:update' patient.id record.id %}">Editar</a>]
+            [<a href="{% url 'psy_records:delete' patient.id record.id %}">Excluir</a>]
+        {% empty %}
+            <li>Este paciente ainda não possui prontuários.</li>
+        {% endfor %}
+        </li>
+    </ul>
+
+    <p>
+        <a href="{% url 'patients:list' %}">⬅ Voltar para lista de pacientes</a>
     </p>
 </body>
+
 </html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Excluir Prontuário</title>
+</head>
+<body>
+    <h1>Confirmar Exclusão</h1>
+    <p>Tem certeza que deseja excluir o Prontuário nº {{ record.record_number }} do paciente {{ record.patient.full_name }}?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Sim, excluir</button>
+        <a href="{% url 'patients:detail' record.patient.id %}">Cancelar</a>
+    </form>
+</body>
+</html>

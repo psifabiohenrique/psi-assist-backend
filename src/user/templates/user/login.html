@@ -3,4 +3,5 @@
   {% csrf_token %}
   {{ form.as_p }}
   <button type="submit">Entrar</button>
+  <a href="{% url 'user:signup' %}">Cadastrar</a>
 </form>

@@ -13,3 +13,4 @@ wheels/
 # Data base
 *.sqlite3
 *.sqlite
+src/db.sqlite3
