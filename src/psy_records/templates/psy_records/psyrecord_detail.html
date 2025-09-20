@@ -1,18 +1,103 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prontuário nº {{ record.record_number }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
-<body>
-    <h1>Prontuário nº {{ record.record_number }}</h1>
-    <p><strong>Data:</strong> {{ record.date|date:"d/m/Y" }}</p>
-    <p><strong>Conteúdo:</strong></p>
-    <pre>{{ record.content }}</pre>
-    <p>
-        <a href="{% url 'psy_records:update' record.patient.id record.id %}">Editar</a> |
-        <a href="{% url 'psy_records:delete' record.patient.id record.id %}">Excluir</a> |
-        <a href="{% url 'patients:detail' record.patient.id %}">Voltar ao Paciente</a>
-    </p>
+
+<body class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="bg-white p-6 border rounded-xl shadow-sm mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-semibold text-gray-800 flex items-center space-x-2">
+                        <i class="fas fa-file-medical text-blue-600"></i>
+                        <span>Prontuário nº {{ record.record_number }}</span>
+                    </h1>
+                    <p class="text-gray-500 mt-1 flex items-center space-x-2">
+                        <i class="fas fa-user text-gray-400"></i>
+                        <span>{{ record.patient.full_name }}</span>
+                    </p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a href="{% url 'psy_records:update' record.patient.id record.id %}"
+                        class="text-yellow-600 hover:text-yellow-800 flex items-center space-x-1 hover:scale-105 transition-transform duration-200">
+                        <i class="fas fa-edit"></i>
+                        <span>Editar</span>
+                    </a>
+                    <a href="{% url 'psy_records:delete' record.patient.id record.id %}"
+                        class="text-red-600 hover:text-red-800 flex items-center space-x-1 hover:scale-105 transition-transform duration-200">
+                        <i class="fas fa-trash"></i>
+                        <span>Excluir</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Prontuário -->
+        <div class="bg-white p-6 border rounded-xl shadow-sm mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center space-x-2">
+                <i class="fas fa-info-circle text-blue-600"></i>
+                <span>Informações do Registro</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-1">Data do Registro</p>
+                    <p class="font-semibold text-gray-800 flex items-center space-x-1">
+                        <i class="fas fa-calendar text-blue-600"></i>
+                        <span>{{ record.date|date:"d/m/Y" }}</span>
+                    </p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-500 mb-1">Número do Prontuário</p>
+                    <p class="font-semibold text-gray-800 flex items-center space-x-1">
+                        <i class="fas fa-hashtag text-blue-600"></i>
+                        <span>{{ record.record_number }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo do Prontuário -->
+        <div class="bg-white p-6 border rounded-xl shadow-sm mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center space-x-2">
+                <i class="fas fa-file-alt text-blue-600"></i>
+                <span>Conteúdo do Prontuário</span>
+            </h2>
+            <div class="bg-gray-50 p-4 rounded-lg border">
+                <pre class="whitespace-pre-wrap text-gray-800 font-mono text-sm leading-relaxed">{{ record.content }}</pre>
+            </div>
+        </div>
+
+        <!-- Navegação -->
+        <div class="flex items-center justify-between">
+            <a href="{% url 'patients:detail' record.patient.id %}"
+                class="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 hover:scale-105 transition-transform duration-200">
+                <i class="fas fa-arrow-left"></i>
+                <span>Voltar ao Paciente</span>
+            </a>
+            
+            <div class="flex items-center space-x-4">
+                <a href="{% url 'psy_records:update' record.patient.id record.id %}"
+                    class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
+                    <i class="fas fa-edit"></i>
+                    <span>Editar Prontuário</span>
+                </a>
+                <a href="{% url 'psy_records:delete' record.patient.id record.id %}"
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:scale-105 transition-transform duration-200">
+                    <i class="fas fa-trash"></i>
+                    <span>Excluir Prontuário</span>
+                </a>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>
