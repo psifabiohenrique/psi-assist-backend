@@ -20,12 +20,17 @@ def signup_view(request):
             return redirect("patients:list")
     else:
         form = CustomUserCreationForm()
-    return render(request, "user/signup.html", {"form": form})
+    return render(request, "user/signup.html", {"form": form, "title": "Cadastrar - Psi Assist"})
 
 
 class CustomLoginView(LoginView):
     authentication_form = CustomAuthenticationForm
     template_name = "user/login.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Login - Psi Assist'
+        return context
 
 
 @login_required

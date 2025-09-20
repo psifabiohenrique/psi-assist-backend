@@ -1,7 +1,30 @@
-<h2>Cadastro</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Cadastrar</button>
-  <a href="{% url 'user:login' %}">Fazer login</a>
-</form>
+{% load crispy_forms_tags %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="h-screen flex items-center justify-center">
+
+  <div class="mt-50 p-4 border rounded-xl">
+
+    <h2 class="text-center p-4">Cadastro</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <div class="flex justify-center">
+        <button type="submit" class="hover:scale-120 p-8 cursor-pointer">Cadastrar</button>
+        <a href="{% url 'user:login' %}" class="p-8 cursor-pointer hover:scale-120 inline-block">Fazer login</a>
+      </div>
+    </form>
+
+  </div>
+</body>
+
+</html>
