@@ -143,3 +143,7 @@ AUTH_USER_MODEL = 'user.User'
 LOGIN_URL = 'user:login'
 LOGIN_REDIRECT_URL = 'patients:list'
 LOGOUT_REDIRECT_URL = 'user:login'
+
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [ BASE_DIR / "static", ]

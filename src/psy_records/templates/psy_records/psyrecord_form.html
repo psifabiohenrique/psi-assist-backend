@@ -1,21 +1,252 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>{% if record %}Editar Prontuário{% else %}Novo Prontuário{% endif %}</title>
+    <script src="{% static 'psy_records/js/recorder.js' %}"></script>
+    <script src="{% static 'psy_records/js/ui_handler.js' %}"></script>
+    <script src="{% static 'psy_records/js/submit.js' %}"></script>
+    <style>
+        /* Estilos básicos para feedback visual */
+        .recording-section {
+            border: 2px solid #e5e5e5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        
+        .form-section {
+            border: 2px solid #e5e5e5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        
+        .recording-status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .recording-status.ready { background-color: #e8f5e8; color: #2d5a2d; }
+        .recording-status.recording { 
+            background-color: #ffe8e8; 
+            color: #8b0000; 
+            animation: pulse 1.5s infinite;
+        }
+        .recording-status.success { background-color: #e8f5e8; color: #2d5a2d; }
+        .recording-status.error { background-color: #ffe8e8; color: #8b0000; }
+        .recording-status.info { background-color: #e8f4fd; color: #1e4a72; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .recording-timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #8b0000;
+            margin: 10px 0;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .control-group select, .control-group input, .control-group textarea {
+            width: 100%;
+            max-width: 500px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        
+        .control-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .button-group {
+            margin: 15px 0;
+        }
+        
+        .button-group button {
+            margin-right: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        
+        .btn-primary:hover { background-color: #0056b3; }
+        .btn-success:hover { background-color: #1e7e34; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-secondary:hover { background-color: #545b62; }
+        
+        .btn-primary:disabled, .btn-success:disabled, .btn-danger:disabled, .btn-secondary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .submit-status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .submit-status.loading { background-color: #fff3cd; color: #856404; }
+        .submit-status.success { background-color: #d4edda; color: #155724; }
+        .submit-status.error { background-color: #f8d7da; color: #721c24; }
+        
+        .mode-info {
+            background-color: #e8f4fd;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        
+        .mode-info h4 {
+            margin-top: 0;
+            color: #1e4a72;
+        }
+    </style>
 </head>
+
 <body>
     <h1>{% if record %}Editar Prontuário{% else %}Novo Prontuário{% endif %}</h1>
     <p><strong>Paciente:</strong> {{ patient.full_name }}</p>
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Salvar</button>
-    </form>
+    <!-- Informações sobre os modos de uso -->
+    <div class="mode-info">
+        <h4>💡 Como usar este formulário:</h4>
+        <ul>
+            <li><strong>Modo Manual:</strong> Digite o conteúdo do prontuário e clique em "Salvar"</li>
+            <li><strong>Modo com IA:</strong> Grave a sessão, finalize a gravação e escolha "Processar com IA"</li>
+        </ul>
+    </div>
+
+    <!-- Seção de Gravação de Áudio -->
+    <div class="recording-section">
+        <h3>🎙️ Gravação da Sessão (Opcional)</h3>
+        
+        <!-- Status da gravação -->
+        <div id="recording-status" class="recording-status ready">
+            Pronto para gravar.
+        </div>
+        
+        <!-- Controles iniciais -->
+        <div id="recording-controls">
+            <div class="control-group">
+                <label for="audio-device-select">Selecionar Microfone:</label>
+                <select id="audio-device-select">
+                    <option value="">Carregando dispositivos...</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="capture-system-audio">
+                    Capturar áudio do sistema (experimental)
+                </label>
+                <small style="color: #666;">
+                    Permite gravar o áudio do computador junto com o microfone. 
+                    Pode não funcionar em todos os navegadores.
+                </small>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" id="start-recording-btn" class="btn-primary">
+                    🔴 Iniciar Gravação
+                </button>
+            </div>
+        </div>
+        
+        <!-- Controles durante a gravação -->
+        <div id="recording-active" class="hidden">
+            <div class="recording-timer" id="recording-timer">00:00</div>
+            <p>🔴 Gravando... Fale normalmente durante a sessão.</p>
+            
+            <div class="button-group">
+                <button type="button" id="stop-recording-btn" class="btn-success">
+                    ⏹️ Finalizar Gravação
+                </button>
+                <button type="button" id="cancel-recording-btn" class="btn-danger">
+                    ❌ Cancelar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Controles após finalizar a gravação -->
+        <div id="recording-complete" class="hidden">
+            <p>✅ Gravação finalizada! O download foi iniciado automaticamente.</p>
+            
+            <div id="submit-with-audio" class="hidden">
+                <p><strong>Escolha uma opção:</strong></p>
+                <div class="button-group">
+                    <button type="button" id="submit-with-audio-btn" class="btn-primary">
+                        🤖 Processar com IA e Salvar
+                    </button>
+                    <button type="button" onclick="window.audioSubmitter.submitWithoutAudio()" class="btn-secondary">
+                        📝 Salvar Apenas Texto
+                    </button>
+                    <button type="button" onclick="window.audioRecorderUI.resetUI()" class="btn-secondary">
+                        🔄 Nova Gravação
+                    </button>
+                </div>
+                
+                <div id="submit-status" class="submit-status hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário de Texto -->
+    <div class="form-section">
+        <h3>📝 Conteúdo do Prontuário</h3>
+        
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            
+            <div class="button-group">
+                <button type="submit" class="btn-success">
+                    💾 Salvar Prontuário
+                </button>
+            </div>
+        </form>
+    </div>
 
     <p>
         <a href="{% url 'patients:detail' patient.id %}">⬅ Voltar</a>
     </p>
+
+
+
+    <!-- Variável escondida -->
+     <p><span id="patient-name" class="hidden">{{ patient.full_name }}</span></p>
 </body>
+
 </html>

@@ -10,7 +10,7 @@ class PsyRecord(models.Model):
     
     record_number = models.PositiveIntegerField(editable=False)
     date = models.DateField(default=timezone.now)
-    content = models.TextField()
+    content = models.TextField(blank=True)
     
     class Meta:
         unique_together = ('patient', 'record_number')
