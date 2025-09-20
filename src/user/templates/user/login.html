@@ -9,6 +9,9 @@
   <title>{{ title }}</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 </head>
 
@@ -18,8 +21,12 @@
     <form method="post" class="p-2">
       {% csrf_token %}
       {{ form|crispy }}
-      <button type="submit" class="hover:scale-120 p-2 cursor-pointer">Entrar</button>
-      <a href="{% url 'user:signup' %}" class="p-2 cursor-pointer hover:scale-120 inline-block">Cadastrar</a>
+      <button type="submit" class="hover:scale-120 p-2 cursor-pointer">
+        <i class="fas fa-right-to-bracket"></i> Entrar
+      </button>
+      <a href="{% url 'user:signup' %}" class="p-2 cursor-pointer hover:scale-120 inline-block">
+        <i class="fas fa-user-plus"></i> Cadastrar
+      </a>
     </form>
   </div>
 </body>
