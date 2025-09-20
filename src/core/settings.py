@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'psy_records',
     'user',
 
+    "crispy_forms",
+    "crispy_tailwind",
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
 ]
 
 MIDDLEWARE = [
@@ -147,3 +150,8 @@ LOGOUT_REDIRECT_URL = 'user:login'
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [ BASE_DIR / "static", ]
+
+# Tailwindcss
+
+CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
+CRISPY_TEMPLATE_PACK = "tailwind"
