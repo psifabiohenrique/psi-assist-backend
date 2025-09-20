@@ -1,6 +1,6 @@
 import os
 from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -97,14 +97,14 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
                 audio_bytes += chunk
             
             # Determina o MIME type baseado na extensão do arquivo
-            mime_type = self.get_audio_mime_type(audio_file)
+            mime_type = get_audio_mime_type(audio_file)
             
             # Prepara o prompt do sistema
             system_prompt = self.request.user.system_prompt or "Você é um assistente especializado em análise de sessões de psicoterapia."
             
             # Gera o conteúdo usando upload inline
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-flash",
                 contents=[
                     "Por favor, analise este áudio de sessão de psicoterapia e gere um registro de prontuário profissional seguindo as diretrizes do system prompt.",
                     types.Part.from_bytes(
@@ -125,24 +125,6 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
         except Exception as e:
             print(f"Erro ao processar áudio com Gemini: {str(e)}")
             return None
-
-    def get_audio_mime_type(self, audio_file):
-        """
-        Determina o MIME type baseado na extensão do arquivo
-        """
-        extension = os.path.splitext(audio_file.name)[1].lower()
-        
-        mime_types = {
-            '.wav': 'audio/wav',
-            '.mp3': 'audio/mp3', 
-            '.aiff': 'audio/aiff',
-            '.aac': 'audio/aac',
-            '.ogg': 'audio/ogg',
-            '.flac': 'audio/flac',
-            '.webm': 'audio/webm'  # Para gravações do navegador
-        }
-        
-        return mime_types.get(extension, 'audio/wav')
 
     def get_success_url(self):
         return reverse("patients:detail", args=[self.patient.id])
@@ -177,16 +159,69 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_queryset(self):
         return PsyRecord.objects.filter(
-            patient__user=self.request.user, patient_id=self.kwargs["patient_id"]
+            patient__user=self.request.user,
+            patient_id=self.kwargs["patient_id"],
         )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['patient'] = self.object.patient
+        context["patient"] = self.object.patient
         return context
 
     def get_success_url(self):
         return reverse("patients:detail", args=[self.kwargs["patient_id"]])
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        # Caso o usuário tenha enviado áudio para reprocessar
+        if "reprocess_audio" in request.FILES:
+            user = request.user
+            api_key = user.api_key
+            system_prompt = user.system_prompt
+
+            audio_file = request.FILES["reprocess_audio"]
+            audio_bytes = audio_file.read()
+
+            try:
+                # Cria client com a API Key do usuário
+                client = genai.Client(api_key=api_key)
+
+                mime_type = get_audio_mime_type(audio_file)
+
+                # Faz a chamada ao modelo Gemini Flash
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash",
+                    contents=[
+                        "Por favor, analise este áudio de sessão de psicoterapia e gere um registro de prontuário profissional seguindo as diretrizes do system prompt.",
+                        types.Part.from_bytes(
+                            data=audio_bytes,
+                            mime_type=mime_type
+                        )
+                    ],
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                        temperature=0.3,
+                        max_output_tokens=2000
+                    )
+                )
+
+                self.object.content = response.text
+                self.object.save()
+
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse(
+                        {"success": True, "redirect_url": self.get_success_url()}
+                    )
+                return redirect(self.get_success_url())
+
+            except Exception as e:
+                if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                    return JsonResponse({"success": False, "message": str(e)})
+                raise
+
+        # Caso não tenha reprocessamento → fluxo normal de edição de texto
+        return super().post(request, *args, **kwargs)
 
 
 class PsyRecordDeleteView(LoginRequiredMixin, DeleteView):
@@ -206,3 +241,24 @@ class PsyRecordDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_success_url(self):
         return reverse("patients:detail", args=[self.kwargs["patient_id"]])
+
+
+# Função auxiliar
+
+def get_audio_mime_type(audio_file):
+        """
+        Determina o MIME type baseado na extensão do arquivo
+        """
+        extension = os.path.splitext(audio_file.name)[1].lower()
+        
+        mime_types = {
+            '.wav': 'audio/wav',
+            '.mp3': 'audio/mp3', 
+            '.aiff': 'audio/aiff',
+            '.aac': 'audio/aac',
+            '.ogg': 'audio/ogg',
+            '.flac': 'audio/flac',
+            '.webm': 'audio/webm'  # Para gravações do navegador
+        }
+        
+        return mime_types.get(extension, 'audio/wav')
