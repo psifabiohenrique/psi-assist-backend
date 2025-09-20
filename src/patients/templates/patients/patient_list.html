@@ -1,26 +1,64 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meus Pacientes</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
-<body>
-    <p><a href="{% url 'user:update' %}">Atualizar dados de usuário</a></p>
-    <h1>Meus Pacientes</h1>
-    <p><a href="{% url 'patients:create' %}">Adicionar Novo Paciente</a></p>
-    <ul>
-        {% for patient in patients %}
-            <li>
-                {{ patient.full_name }} ({{ patient.birth_date|date:"d/m/Y" }})
-                - <a href="{% url 'patients:detail' patient.pk %}">Ver Detalhes</a>
-                - <a href="{% url 'patients:update' patient.pk %}">Editar</a>
-                - <a href="{% url 'patients:delete' patient.pk %}">Excluir</a>
+
+<body class="h-screen flex items-center justify-center">
+    <div class="mt-20 p-4 border rounded-xl">
+        <h1 class="text-center p-4">Meus Pacientes</h1>
+        <div>
+            <a href="{% url 'patients:create' %}" class="p-2 cursor-pointer hover:scale-110 inline-block">
+                <i class="fas fa-user-plus"></i> Novo Paciente
+            </a>
+            <a href="{% url 'user:update' %}" class="p-2 cursor-pointer hover:scale-110 inline-block">
+                <i class="fas fa-user-edit"></i>Minha Conta
+            </a>
+        </div>
+        <ul class="space-y-3">
+            {% for patient in patients %}
+            <li class="flex items-center justify-between p-4 border rounded-lg shadow-sm bg-white">
+                <div>
+                    <span class="font-semibold text-gray-800">{{ patient.full_name }}</span>
+                    <span class="text-gray-500 text-sm">({{ patient.birth_date|date:"d/m/Y" }})</span>
+                </div>
+                <div class="flex items-center space-x-4 text-sm">
+                    <!-- Ver Detalhes -->
+                    <a href="{% url 'patients:detail' patient.pk %}"
+                        class="text-blue-600 hover:text-blue-800 flex items-center space-x-1">
+                        <i class="fas fa-eye"></i> <span>Ver</span>
+                    </a>
+
+                    <!-- Editar -->
+                    <a href="{% url 'patients:update' patient.pk %}"
+                        class="text-yellow-600 hover:text-yellow-800 flex items-center space-x-1">
+                        <i class="fas fa-edit"></i> <span>Editar</span>
+                    </a>
+
+                    <!-- Excluir -->
+                    <a href="{% url 'patients:delete' patient.pk %}"
+                        class="text-red-600 hover:text-red-800 flex items-center space-x-1">
+                        <i class="fas fa-trash"></i> <span>Excluir</span>
+                    </a>
+                </div>
             </li>
-        {% empty %}
-            <li>Você ainda não possui pacientes cadastrados.</li>
-        {% endfor %}
-    </ul>
-    <p><a href="{% url 'user:logout' %}">Sair</a></p>
+            {% empty %}
+            <li class="p-4 text-center text-gray-500">
+                Você ainda não possui pacientes cadastrados.
+            </li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'user:logout' %}"  class="pt-8 cursor-pointer hover:scale-120 inline-block">
+            <i class="fas fa-sign-out-alt"></i> Sair
+        </a>
+    </div>
 </body>
+
 </html>
