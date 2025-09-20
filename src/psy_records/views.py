@@ -1,4 +1,7 @@
+from fileinput import filename
+import threading
 import os
+
 from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -32,40 +35,36 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.patient = self.patient
+        self.object = form.save(commit=False)
+        self.object.content = form.instance.content or "[Processando áudio em background...]"
+        self.object.date = form.instance.date
+        self.object.save()
         
         # Verifica se há áudio para processar
         has_audio = self.request.POST.get('has_audio') == 'true'
         audio_file = self.request.FILES.get('audio_file')
         
         if has_audio and audio_file:
-            # Processa o áudio com Gemini
-            try:
-                processed_content = self.process_audio_with_gemini(audio_file)
-                if processed_content:
-                    form.instance.content = processed_content
-                    
-                    # Se for uma requisição AJAX, retorna JSON
-                    if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        # Salva o prontuário
-                        self.object = form.save()
-                        return JsonResponse({
-                            'success': True,
-                            'message': 'Prontuário processado e salvo com sucesso!',
-                            'redirect_url': self.get_success_url()
-                        })
-                else:
-                    # Se falhou o processamento, mantém o conteúdo original do form
-                    messages.warning(
-                        self.request, 
-                        'Não foi possível processar o áudio. O prontuário foi salvo com o conteúdo digitado.'
-                    )
-            except Exception as e:
-                # Em caso de erro, mantém o conteúdo original
-                messages.error(
-                    self.request,
-                    f'Erro ao processar áudio: {str(e)}. O prontuário foi salvo com o conteúdo digitado.'
-                )
-        
+            audio_bytes = b"".join(chunk for chunk in audio_file.chunks())
+            file_name = audio_file.name
+            # Lança uma thread para processar o áudio em segundo plano
+            threading.Thread(
+                target=self._process_audio_background,
+                args=(self.object.id, audio_bytes, file_name, self.request.user.api_key, self.request.user.system_prompt),
+                daemon=True
+            ).start()
+
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'message': 'Prontuário criado! O conteúdo será atualizado em background.',
+                'redirect_url': self.get_success_url()
+            })
+
+        messages.info(
+            self.request,
+            "Prontuário criado! O conteúdo do áudio será processado em background."
+        )
         # Comportamento normal (sem áudio ou em caso de erro)
         response = super().form_valid(form)
         
@@ -79,28 +78,23 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
             
         return response
 
-    def process_audio_with_gemini(self, audio_file):
+    def process_audio_with_gemini(self, audio_bytes, file_name, api_key, system_prompt):
         """
         Processa o arquivo de áudio usando Google Gemini com upload inline
         """
         try:
             # Verifica se o usuário tem API key configurada
-            if not self.request.user.api_key:
+            if not api_key:
                 raise ValueError("API key do Gemini não configurada para este usuário")
             
             # Configura o Gemini com a API key do usuário
-            client = genai.Client(api_key=self.request.user.api_key)
-            
-            # Lê os bytes do áudio diretamente do arquivo Django
-            audio_bytes = b''
-            for chunk in audio_file.chunks():
-                audio_bytes += chunk
+            client = genai.Client(api_key=api_key)
             
             # Determina o MIME type baseado na extensão do arquivo
-            mime_type = get_audio_mime_type(audio_file)
+            mime_type = get_audio_mime_type(file_name)
             
             # Prepara o prompt do sistema
-            system_prompt = self.request.user.system_prompt or "Você é um assistente especializado em análise de sessões de psicoterapia."
+            system_prompt = system_prompt or "Você é um assistente especializado em análise de sessões de psicoterapia."
             
             # Gera o conteúdo usando upload inline
             response = client.models.generate_content(
@@ -115,7 +109,7 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     temperature=0.3,
-                    max_output_tokens=2000
+                    max_output_tokens=5000
                 )
             )
             
@@ -125,6 +119,23 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
         except Exception as e:
             print(f"Erro ao processar áudio com Gemini: {str(e)}")
             return None
+
+    def _process_audio_background(self, record_id, audio_bytes, file_name, api_key, system_prompt):
+        """Executa o processamento com Gemini em background"""
+        from psy_records.models import PsyRecord
+
+        try:
+            processed_content = self.process_audio_with_gemini(audio_bytes, file_name, api_key, system_prompt)
+            record = PsyRecord.objects.get(id=record_id)
+            if processed_content:
+                record.content = processed_content
+            else:
+                record.content = "⚠ Não foi possível processar o áudio."
+            record.save(update_fields=['content'])
+        except Exception as e:
+            record = PsyRecord.objects.get(id=record_id)
+            record.content = f"⚠ Erro ao processar áudio: {e}"
+            record.save(update_fields=['content'])
 
     def get_success_url(self):
         return reverse("patients:detail", args=[self.patient.id])
@@ -245,11 +256,11 @@ class PsyRecordDeleteView(LoginRequiredMixin, DeleteView):
 
 # Função auxiliar
 
-def get_audio_mime_type(audio_file):
+def get_audio_mime_type(file_name):
         """
         Determina o MIME type baseado na extensão do arquivo
         """
-        extension = os.path.splitext(audio_file.name)[1].lower()
+        extension = file_name[1].lower()
         
         mime_types = {
             '.wav': 'audio/wav',
