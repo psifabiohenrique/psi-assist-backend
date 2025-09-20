@@ -1,6 +1,4 @@
-from fileinput import filename
 import threading
-import os
 
 from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
@@ -193,46 +191,93 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
 
             audio_file = request.FILES["reprocess_audio"]
             audio_bytes = audio_file.read()
+            file_name = audio_file.name
 
-            try:
-                # Cria client com a API Key do usuário
-                client = genai.Client(api_key=api_key)
+            # Atualiza o conteúdo temporariamente para indicar processamento
+            self.object.content = "[Reprocessando áudio em background...]"
+            self.object.save(update_fields=['content'])
 
-                mime_type = get_audio_mime_type(audio_file)
+            # Lança uma thread para processar o áudio em segundo plano
+            threading.Thread(
+                target=self._process_audio_background,
+                args=(self.object.id, audio_bytes, file_name, api_key, system_prompt),
+                daemon=True
+            ).start()
 
-                # Faz a chamada ao modelo Gemini Flash
-                response = client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=[
-                        "Por favor, analise este áudio de sessão de psicoterapia e gere um registro de prontuário profissional seguindo as diretrizes do system prompt.",
-                        types.Part.from_bytes(
-                            data=audio_bytes,
-                            mime_type=mime_type
-                        )
-                    ],
-                    config=types.GenerateContentConfig(
-                        system_instruction=system_prompt,
-                        temperature=0.3,
-                        max_output_tokens=2000
-                    )
-                )
+            if request.headers.get("x-requested-with") == "XMLHttpRequest":
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Áudio sendo reprocessado em background!',
+                    'redirect_url': self.get_success_url()
+                })
 
-                self.object.content = response.text
-                self.object.save()
-
-                if request.headers.get("x-requested-with") == "XMLHttpRequest":
-                    return JsonResponse(
-                        {"success": True, "redirect_url": self.get_success_url()}
-                    )
-                return redirect(self.get_success_url())
-
-            except Exception as e:
-                if request.headers.get("x-requested-with") == "XMLHttpRequest":
-                    return JsonResponse({"success": False, "message": str(e)})
-                raise
+            messages.info(
+                request,
+                "Áudio sendo reprocessado em background! O conteúdo será atualizado em breve."
+            )
+            return redirect(self.get_success_url())
 
         # Caso não tenha reprocessamento → fluxo normal de edição de texto
         return super().post(request, *args, **kwargs)
+
+    def _process_audio_background(self, record_id, audio_bytes, file_name, api_key, system_prompt):
+        """Executa o reprocessamento com Gemini em background"""
+        from psy_records.models import PsyRecord
+
+        try:
+            processed_content = self.process_audio_with_gemini(audio_bytes, file_name, api_key, system_prompt)
+            record = PsyRecord.objects.get(id=record_id)
+            if processed_content:
+                record.content = processed_content
+            else:
+                record.content = "⚠ Não foi possível reprocessar o áudio."
+            record.save(update_fields=['content'])
+        except Exception as e:
+            record = PsyRecord.objects.get(id=record_id)
+            record.content = f"⚠ Erro ao reprocessar áudio: {e}"
+            record.save(update_fields=['content'])
+
+    def process_audio_with_gemini(self, audio_bytes, file_name, api_key, system_prompt):
+        """
+        Processa o arquivo de áudio usando Google Gemini com upload inline
+        """
+        try:
+            # Verifica se o usuário tem API key configurada
+            if not api_key:
+                raise ValueError("API key do Gemini não configurada para este usuário")
+
+            # Configura o Gemini com a API key do usuário
+            client = genai.Client(api_key=api_key)
+
+            # Determina o MIME type baseado na extensão do arquivo
+            mime_type = get_audio_mime_type(file_name)
+
+            # Prepara o prompt do sistema
+            system_prompt = system_prompt or "Você é um assistente especializado em análise de sessões de psicoterapia."
+
+            # Gera o conteúdo usando upload inline
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[
+                    "Por favor, analise este áudio de sessão de psicoterapia e gere um registro de prontuário profissional seguindo as diretrizes do system prompt.",
+                    types.Part.from_bytes(
+                        data=audio_bytes,
+                        mime_type=mime_type
+                    )
+                ],
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    temperature=0.3,
+                    max_output_tokens=5000
+                )
+            )
+
+            # Retorna o texto gerado
+            return response.text if response.text else None
+
+        except Exception as e:
+            print(f"Erro ao processar áudio com Gemini: {str(e)}")
+            return None
 
 
 class PsyRecordDeleteView(LoginRequiredMixin, DeleteView):
