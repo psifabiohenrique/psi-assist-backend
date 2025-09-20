@@ -1,17 +1,55 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirmar Exclusão</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
-<body>
-    <h1>Confirmar Exclusão</h1>
-    <p>Você tem certeza que deseja excluir o paciente <strong>{{ patient.full_name }}</strong>?</p>
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit">Sim, Excluir</button>
-        <a href="{% url 'patients:list' %}">Não, Cancelar</a>
-    </form>
+
+<body class="h-screen flex items-center justify-center bg-gray-50">
+    <div class="mt-20 p-6 border rounded-xl bg-white shadow-lg max-w-md w-full mx-4">
+        <div class="text-center mb-6">
+            <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+            <h1 class="text-2xl font-semibold text-gray-800 mb-2">Confirmar Exclusão</h1>
+        </div>
+        
+        <div class="text-center mb-6">
+            <p class="text-gray-600 mb-2">Você tem certeza que deseja excluir o paciente</p>
+            <p class="font-semibold text-gray-800 text-lg">{{ patient.full_name }}?</p>
+            <p class="text-sm text-red-600 mt-2">
+                <i class="fas fa-info-circle"></i> Esta ação não pode ser desfeita.
+            </p>
+        </div>
+        
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div class="flex space-x-3">
+                <button type="submit" 
+                        class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                    <i class="fas fa-trash"></i>
+                    <span>Sim, Excluir</span>
+                </button>
+                <a href="{% url 'patients:list' %}" 
+                   class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 text-center">
+                    <i class="fas fa-times"></i>
+                    <span>Cancelar</span>
+                </a>
+            </div>
+        </form>
+        
+        <div class="mt-6 text-center">
+            <a href="{% url 'patients:list' %}" 
+               class="text-blue-600 hover:text-blue-800 inline-flex items-center space-x-1 hover:scale-105 transition-transform duration-200">
+                <i class="fas fa-arrow-left"></i>
+                <span>Voltar para lista de pacientes</span>
+            </a>
+        </div>
+    </div>
 </body>
+
 </html>
