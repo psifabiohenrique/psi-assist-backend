@@ -76,7 +76,7 @@ exe = EXE(
     a.scripts,
     # NÃO incluir a.binaries, a.zipfiles, a.datas aqui para modo não-onefile
     [],
-    name='PSI_Assist_Backend',
+    name='psi_assist',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -101,5 +101,6 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
+    console=True,
     name='PSI_Assist_Backend'
 )
