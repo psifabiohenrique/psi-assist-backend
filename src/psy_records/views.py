@@ -98,14 +98,13 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=[
-                    "Por favor, analise este áudio de sessão de psicoterapia e gere um registro de prontuário profissional seguindo as diretrizes do system prompt.",
+                    system_prompt,
                     types.Part.from_bytes(
                         data=audio_bytes,
                         mime_type=mime_type
                     )
                 ],
                 config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
                     temperature=0.3,
                     max_output_tokens=5000
                 )
@@ -259,14 +258,13 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=[
-                    "Por favor, analise este áudio de sessão de psicoterapia e gere um registro de prontuário profissional seguindo as diretrizes do system prompt.",
+                    system_prompt,
                     types.Part.from_bytes(
                         data=audio_bytes,
                         mime_type=mime_type
                     )
                 ],
                 config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
                     temperature=0.3,
                     max_output_tokens=5000
                 )
