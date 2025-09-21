@@ -111,7 +111,7 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
             )
             
             # Retorna o texto gerado
-            return response.text if response.text else None
+            return response.text
             
         except Exception as e:
             print(f"Erro ao processar áudio com Gemini: {str(e)}")
@@ -252,7 +252,7 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
             mime_type = get_audio_mime_type(file_name)
 
             # Prepara o prompt do sistema
-            system_prompt = system_prompt or "Você é um assistente especializado em análise de sessões de psicoterapia."
+            system_prompt = system_prompt
 
             # Gera o conteúdo usando upload inline
             response = client.models.generate_content(
@@ -271,7 +271,8 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
             )
 
             # Retorna o texto gerado
-            return response.text if response.text else None
+            print(response)
+            return response.text
 
         except Exception as e:
             print(f"Erro ao processar áudio com Gemini: {str(e)}")
