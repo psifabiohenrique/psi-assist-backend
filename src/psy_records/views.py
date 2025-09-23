@@ -1,4 +1,5 @@
 import threading
+import io
 
 from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
@@ -8,6 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from google import genai
 from google.genai import types
+from pydub import AudioSegment
 
 from .models import PsyRecord
 from patients.models import Patient
@@ -43,12 +45,28 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
         audio_file = self.request.FILES.get('audio_file')
         
         if has_audio and audio_file:
-            audio_bytes = b"".join(chunk for chunk in audio_file.chunks())
+            # audio_bytes = b"".join(chunk for chunk in audio_file.chunks())
             file_name = audio_file.name
+            file_type = 'mp3'
+            audio_bytes = audio_file.read()
+            audio_segment_from_upload = AudioSegment.from_file(io.BytesIO(audio_bytes))
+            audio_segment_mp3 = io.BytesIO()
+            audio_segment_from_upload.export(audio_segment_mp3, format=file_type)
+            audio_segment_mp3.seek(0)
+
+            # Só para depuração
+            file_size_bytes = audio_segment_mp3.getbuffer().nbytes
+            file_size_mb = file_size_bytes / (1024 * 1024)
+            print(f'Nome do arquivo recebido: {audio_file.name}')
+            print(f'Tamanho do arquivo em mp3: {file_size_mb:.2f} MB ({file_size_bytes:,} bytes)')
+
+            # file_name = audio_file.name
+            file_name = 'teste.' + file_type
+
             # Lança uma thread para processar o áudio em segundo plano
             threading.Thread(
-                target=self._process_audio_background,
-                args=(self.object.id, audio_bytes, file_name, self.request.user.api_key, self.request.user.system_prompt),
+                target= _process_audio_background,
+                args=(self.object.id, audio_segment_mp3, file_name, self.request.user.api_key, self.request.user.system_prompt),
                 daemon=True
             ).start()
 
@@ -75,64 +93,6 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
             })
             
         return response
-
-    def process_audio_with_gemini(self, audio_bytes, file_name, api_key, system_prompt):
-        """
-        Processa o arquivo de áudio usando Google Gemini com upload inline
-        """
-        try:
-            # Verifica se o usuário tem API key configurada
-            if not api_key:
-                raise ValueError("API key do Gemini não configurada para este usuário")
-            
-            # Configura o Gemini com a API key do usuário
-            client = genai.Client(api_key=api_key)
-            
-            # Determina o MIME type baseado na extensão do arquivo
-            mime_type = get_audio_mime_type(file_name)
-            
-            # Prepara o prompt do sistema
-            system_prompt = system_prompt or "Você é um assistente especializado em análise de sessões de psicoterapia."
-            
-            # Gera o conteúdo usando upload inline
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[
-                    system_prompt,
-                    types.Part.from_bytes(
-                        data=audio_bytes,
-                        mime_type=mime_type
-                    )
-                ],
-                config=types.GenerateContentConfig(
-                    temperature=0.3,
-                    max_output_tokens=5000
-                )
-            )
-            
-            # Retorna o texto gerado
-            return response.text
-            
-        except Exception as e:
-            print(f"Erro ao processar áudio com Gemini: {str(e)}")
-            return None
-
-    def _process_audio_background(self, record_id, audio_bytes, file_name, api_key, system_prompt):
-        """Executa o processamento com Gemini em background"""
-        from psy_records.models import PsyRecord
-
-        try:
-            processed_content = self.process_audio_with_gemini(audio_bytes, file_name, api_key, system_prompt)
-            record = PsyRecord.objects.get(id=record_id)
-            if processed_content:
-                record.content = processed_content
-            else:
-                record.content = "⚠ Não foi possível processar o áudio."
-            record.save(update_fields=['content'])
-        except Exception as e:
-            record = PsyRecord.objects.get(id=record_id)
-            record.content = f"⚠ Erro ao processar áudio: {e}"
-            record.save(update_fields=['content'])
 
     def get_success_url(self):
         return reverse("patients:detail", args=[self.patient.id])
@@ -188,9 +148,22 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
             api_key = user.api_key
             system_prompt = user.system_prompt
 
+            file_type = 'mp3'
             audio_file = request.FILES["reprocess_audio"]
             audio_bytes = audio_file.read()
-            file_name = audio_file.name
+            audio_segment_from_upload = AudioSegment.from_file(io.BytesIO(audio_bytes))
+            audio_segment_mp3 = io.BytesIO()
+            audio_segment_from_upload.export(audio_segment_mp3, format=file_type)
+            audio_segment_mp3.seek(0)
+
+            # Só para depuração
+            file_size_bytes = audio_segment_mp3.getbuffer().nbytes
+            file_size_mb = file_size_bytes / (1024 * 1024)
+            print(f'Nome do arquivo recebido: {audio_file.name}')
+            print(f'Tamanho do arquivo em mp3: {file_size_mb:.2f} MB ({file_size_bytes:,} bytes)')
+
+            # file_name = audio_file.name
+            file_name = 'teste.' + file_type
 
             # Atualiza o conteúdo temporariamente para indicar processamento
             self.object.content = "[Reprocessando áudio em background...]"
@@ -198,8 +171,8 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
 
             # Lança uma thread para processar o áudio em segundo plano
             threading.Thread(
-                target=self._process_audio_background,
-                args=(self.object.id, audio_bytes, file_name, api_key, system_prompt),
+                target= _process_audio_background,
+                args=(self.object.id, audio_segment_mp3, file_name, api_key, system_prompt),
                 daemon=True
             ).start()
 
@@ -218,65 +191,6 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
 
         # Caso não tenha reprocessamento → fluxo normal de edição de texto
         return super().post(request, *args, **kwargs)
-
-    def _process_audio_background(self, record_id, audio_bytes, file_name, api_key, system_prompt):
-        """Executa o reprocessamento com Gemini em background"""
-        from psy_records.models import PsyRecord
-
-        try:
-            processed_content = self.process_audio_with_gemini(audio_bytes, file_name, api_key, system_prompt)
-            record = PsyRecord.objects.get(id=record_id)
-            if processed_content:
-                record.content = processed_content
-            else:
-                record.content = "⚠ Não foi possível reprocessar o áudio."
-            record.save(update_fields=['content'])
-        except Exception as e:
-            record = PsyRecord.objects.get(id=record_id)
-            record.content = f"⚠ Erro ao reprocessar áudio: {e}"
-            record.save(update_fields=['content'])
-
-    def process_audio_with_gemini(self, audio_bytes, file_name, api_key, system_prompt):
-        """
-        Processa o arquivo de áudio usando Google Gemini com upload inline
-        """
-        try:
-            # Verifica se o usuário tem API key configurada
-            if not api_key:
-                raise ValueError("API key do Gemini não configurada para este usuário")
-
-            # Configura o Gemini com a API key do usuário
-            client = genai.Client(api_key=api_key)
-
-            # Determina o MIME type baseado na extensão do arquivo
-            mime_type = get_audio_mime_type(file_name)
-
-            # Prepara o prompt do sistema
-            system_prompt = system_prompt
-
-            # Gera o conteúdo usando upload inline
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[
-                    system_prompt,
-                    types.Part.from_bytes(
-                        data=audio_bytes,
-                        mime_type=mime_type
-                    )
-                ],
-                config=types.GenerateContentConfig(
-                    temperature=0.3,
-                    max_output_tokens=5000
-                )
-            )
-
-            # Retorna o texto gerado
-            print(response)
-            return response.text
-
-        except Exception as e:
-            print(f"Erro ao processar áudio com Gemini: {str(e)}")
-            return None
 
 
 class PsyRecordDeleteView(LoginRequiredMixin, DeleteView):
@@ -300,11 +214,112 @@ class PsyRecordDeleteView(LoginRequiredMixin, DeleteView):
 
 # Função auxiliar
 
-def get_audio_mime_type(file_name):
+def split_audio_bytes(audio_bytes: io.BytesIO, mime_type: str, chunk_size_ms: int = 1_500_000) -> list[io.BytesIO]:
+
+    # Verificar se o arquivo é menor que 19MB
+    audio_bytes.seek(0, 2)  # Move para o final do arquivo
+    file_size = audio_bytes.tell()  # Obtém o tamanho em bytes
+    audio_bytes.seek(0)  # Volta para o início
+    
+    # 19MB em bytes
+    max_size = 19 * 1024 * 1024
+    
+    if file_size < max_size:
+        return [audio_bytes]    
+
+    audio_segment = AudioSegment.from_file(audio_bytes, format=mime_type)
+
+
+    chunks_data = []
+    for i in range(0, len(audio_segment), chunk_size_ms):
+        chunk = audio_segment[i:i + chunk_size_ms]
+        chunk_io = io.BytesIO()
+        chunk.export(chunk_io, format=mime_type)
+        if len(chunk_io.getvalue()) % 2 != 0:
+            chunk_io.seek(0)
+            corrected_data = chunk_io.read()[:-1]
+            if len(corrected_data) % 2 == 0:
+                chunk_io = io.BytesIO(corrected_data)
+                chunk_io.seek(0)
+            else:
+                raise ValueError("Erro de chunking persistente: O chunk ainda não é um múltiplo do tamanho do frame após a correção.")
+        chunks_data.append(chunk_io)
+    
+    return chunks_data
+    
+
+def _process_audio_background(record_id: int, audio_bytes: io.BytesIO, file_name: str, api_key: str, system_prompt: str):
+    """Executa o processamento com Gemini em background"""
+    from psy_records.models import PsyRecord
+
+    try:
+        processed_content = process_audio_with_gemini(audio_bytes, file_name, api_key, system_prompt)
+        print(processed_content)
+        record = PsyRecord.objects.get(id=record_id)
+        if processed_content:
+            record.content = processed_content
+        else:
+            record.content = "⚠ Não foi possível processar o áudio."
+        record.save(update_fields=['content'])
+    except Exception as e:
+        record = PsyRecord.objects.get(id=record_id)
+        record.content = f"⚠ Erro ao processar áudio: {e}"
+        record.save(update_fields=['content'])
+
+
+def process_audio_with_gemini(audio_bytes: io.BytesIO, file_name: str, api_key: str, system_prompt: str) -> str:
+    """
+    Processa o arquivo de áudio usando Google Gemini com upload inline
+    """
+    try:
+        # Verifica se o usuário tem API key configurada
+        if not api_key:
+            raise ValueError("API key do Gemini não configurada para este usuário")
+        
+        # Configura o Gemini com a API key do usuário
+        client = genai.Client(api_key=api_key)
+
+        file_type = get_audio_type(file_name)
+        mime_type = get_audio_mime_type(file_name)
+            
+        # Prepara o prompt do sistema
+        system_prompt = system_prompt or "Você é um assistente especializado em análise de sessões de psicoterapia."
+        # Gera o conteúdo usando upload inline
+        splited_audio_bytes = split_audio_bytes(audio_bytes, file_type)
+
+        data = []
+        for i, chunk in enumerate(splited_audio_bytes):
+            data.append(types.Part.from_bytes(data=chunk.getvalue(), mime_type=mime_type))
+        
+        print(f'### processando {file_name} ###')
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                system_prompt,
+                data
+            ]
+        )
+        print('### Processamento concluído ###')
+
+        return response.text
+        
+    except Exception as e:
+        print(f"Erro ao processar áudio com Gemini: {str(e)}")
+        return None
+
+
+def get_audio_type(file_name: str) -> str:
+        """
+        Determina a extensão do arquivo
+        """
+        extension = file_name.split('.')[-1].lower()
+        return extension
+
+def get_audio_mime_type(file_name: str) -> str:
         """
         Determina o MIME type baseado na extensão do arquivo
         """
-        extension = file_name[1].lower()
+        extension = file_name.split('.')[-1].lower()
         
         mime_types = {
             '.wav': 'audio/wav',
@@ -315,5 +330,4 @@ def get_audio_mime_type(file_name):
             '.flac': 'audio/flac',
             '.webm': 'audio/webm'  # Para gravações do navegador
         }
-        
-        return mime_types.get(extension, 'audio/wav')
+        return mime_types['.' + extension]

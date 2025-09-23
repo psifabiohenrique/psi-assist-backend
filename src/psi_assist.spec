@@ -55,9 +55,10 @@ a = Analysis(
         'psi_assist_backend.settings',
         'psi_assist_backend.urls',
         'psi_assist_backend.wsgi',
-        'google.generativeai',
+        'google',
         'crispy_forms',
         'crispy_tailwind',
+        'pydub'
     ],
     hookspath=[],
     hooksconfig={},
