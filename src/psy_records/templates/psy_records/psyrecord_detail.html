@@ -71,8 +71,11 @@
                 <i class="fas fa-file-alt text-blue-600"></i>
                 <span>Conteúdo do Prontuário</span>
             </h2>
+            <p class="p-2 cursor-pointer hover:scale-120 inline-block">
+                <span  onclick=copy()>Copiar prontuário</span>
+            </p>
             <div class="bg-gray-50 p-4 rounded-lg border">
-                <pre class="whitespace-pre-wrap text-gray-800 font-mono text-sm leading-relaxed">{{ record.content }}</pre>
+                <pre class="whitespace-pre-wrap text-gray-800 font-mono text-sm leading-relaxed" id="record-content">{{ record.content }}</pre>
             </div>
         </div>
 
@@ -98,6 +101,30 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function copy() {
+            // Obtém o conteúdo do elemento com id 'record-content'
+            console.log("Copiando")
+            const recordContent = document.getElementById('record-content');
+            console.log(recordContent)
+            
+            if (recordContent) {
+                // Copia o texto para a área de transferência
+                navigator.clipboard.writeText(recordContent.textContent || recordContent.innerText)
+                    .then(() => {
+                        // Emite um alert confirmando que foi copiado
+                        alert('Conteúdo copiado para a área de transferência!');
+                    })
+                    .catch(err => {
+                        console.error('Erro ao copiar: ', err);
+                        alert('Erro ao copiar o conteúdo.');
+                    });
+            } else {
+                alert('Conteúdo não encontrado.');
+            }            
+        }
+    </script>
 </body>
 
 </html>
