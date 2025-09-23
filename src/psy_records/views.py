@@ -61,7 +61,7 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
             print(f'Tamanho do arquivo em mp3: {file_size_mb:.2f} MB ({file_size_bytes:,} bytes)')
 
             # file_name = audio_file.name
-            file_name = 'teste.' + file_type
+            file_name = self.object.patient.first_name + '.' + file_type
 
             # Lança uma thread para processar o áudio em segundo plano
             threading.Thread(
@@ -163,7 +163,7 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
             print(f'Tamanho do arquivo em mp3: {file_size_mb:.2f} MB ({file_size_bytes:,} bytes)')
 
             # file_name = audio_file.name
-            file_name = 'teste.' + file_type
+            file_name = self.object.patient.first_name + '.' + file_type
 
             # Atualiza o conteúdo temporariamente para indicar processamento
             self.object.content = "[Reprocessando áudio em background...]"
@@ -254,7 +254,6 @@ def _process_audio_background(record_id: int, audio_bytes: io.BytesIO, file_name
 
     try:
         processed_content = process_audio_with_gemini(audio_bytes, file_name, api_key, system_prompt)
-        print(processed_content)
         record = PsyRecord.objects.get(id=record_id)
         if processed_content:
             record.content = processed_content
