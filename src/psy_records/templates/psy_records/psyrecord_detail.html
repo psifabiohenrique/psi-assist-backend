@@ -65,6 +65,14 @@
             </div>
         </div>
 
+        <div>
+            <a href="{% url 'patients:detail' record.patient.id %}"
+                class="inline-flex pb-4 items-center space-x-2 text-blue-600 hover:text-blue-800 hover:scale-105 transition-transform duration-200">
+                <i class="fas fa-arrow-left"></i>
+                <span>Voltar ao Paciente</span>
+            </a>
+        </div>
+
         <!-- Conteúdo do Prontuário -->
         <div class="bg-white p-6 border rounded-xl shadow-sm mb-6">
             <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center space-x-2">
