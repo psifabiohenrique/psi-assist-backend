@@ -11,53 +11,113 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 
-<body class="h-screen flex items-center justify-center">
-    <div class="mt-20 p-4 border rounded-xl">
-        <h1 class="text-center p-4">Meus Pacientes</h1>
-        <div>
-            <a href="{% url 'patients:create' %}" class="p-2 cursor-pointer hover:scale-110 inline-block">
-                <i class="fas fa-user-plus"></i> Novo Paciente
-            </a>
-            <a href="{% url 'user:update' %}" class="p-2 cursor-pointer hover:scale-110 inline-block">
-                <i class="fas fa-user-edit"></i> Minha Conta
+<body class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-2xl mx-auto px-4">
+        <div class="bg-white p-6 border rounded-xl shadow-sm mb-6">
+            <h1 class="text-2xl font-semibold text-gray-800 text-center mb-6">Meus Pacientes</h1>
+
+            <div class="flex flex-wrap gap-2 mb-6">
+                <a href="{% url 'patients:create' %}"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-2 hover:scale-105 transform">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Novo Paciente</span>
+                </a>
+                <a href="{% url 'user:update' %}"
+                    class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-2 hover:scale-105 transform">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Minha Conta</span>
+                </a>
+            </div>
+
+            {% if patients %}
+            <ul class="space-y-3 mb-6">
+                {% for patient in patients %}
+                <li
+                    class="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
+                    <div class="mb-2 sm:mb-0">
+                        <span class="font-semibold text-gray-800">{{ patient.full_name }}</span>
+                        <span class="text-gray-500 text-sm block sm:inline">({{ patient.birth_date|date:"d/m/Y" }})</span>
+                    </div>
+                    <div class="flex items-center space-x-4 text-sm">
+                        <!-- Ver Detalhes -->
+                        <a href="{% url 'patients:detail' patient.pk %}"
+                            class="text-blue-600 hover:text-blue-800 flex items-center space-x-1">
+                            <i class="fas fa-eye"></i> <span>Ver</span>
+                        </a>
+
+                        <!-- Editar -->
+                        <a href="{% url 'patients:update' patient.pk %}"
+                            class="text-yellow-600 hover:text-yellow-800 flex items-center space-x-1">
+                            <i class="fas fa-edit"></i> <span>Editar</span>
+                        </a>
+
+                        <!-- Excluir -->
+                        <a href="{% url 'patients:delete' patient.pk %}"
+                            class="text-red-600 hover:text-red-800 flex items-center space-x-1">
+                            <i class="fas fa-trash"></i> <span>Excluir</span>
+                        </a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <!--Controles de Paginação -->
+            {% if is_paginated %}
+            <div class="flex flex-col sm:flex-row items-center justify-between border-t pt-4 mt-4">
+                <div class="text-sm text-gray-600 mb-2 sm:mb-0">
+                    Mostrando <span class="font-semibold">{{ page_obj.start_index }}</span> a <span
+                        class="font-semibold">{{ page_obj.end_index }}</span> de <span class="font-semibold">{{ paginator.count }}</span> pacientes
+                </div>
+
+                <div class="flex space-x-1">
+                    {% if page_obj.has_previous %}
+                    <a href="?page=1"
+                        class="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}"
+                        class="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                    {% endif %}
+
+                    <span class="px-3 py-1 rounded-md bg-blue-600 text-white">
+                        {{ page_obj.number }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}"
+                        class="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ paginator.num_pages }}"
+                        class="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="p-6 text-center text-gray-500 bg-gray-50 rounded-lg">
+                <i class="fas fa-user-injured text-4xl mb-3 text-gray-300"></i>
+                <p class="text-lg">Você ainda não possui pacientes cadastrados.</p>
+                <a href="{% url 'patients:create' %}"
+                    class="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center space-x-2 hover:scale-105 transform">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Adicionar Primeiro Paciente</span>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="text-center">
+            <a href="{% url 'user:logout' %}"
+                class="inline-flex items-center space-x-2 text-red-600 hover:text-red-800 hover:scale-105 transition-transform duration-200">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Sair</span>
             </a>
         </div>
-        <ul class="space-y-3">
-            {% for patient in patients %}
-            <li class="flex items-center justify-between p-4 border rounded-lg shadow-sm bg-white">
-                <div>
-                    <span class="font-semibold text-gray-800">{{ patient.full_name }}</span>
-                    <span class="text-gray-500 text-sm">({{ patient.birth_date|date:"d/m/Y" }})</span>
-                </div>
-                <div class="flex items-center space-x-4 text-sm">
-                    <!-- Ver Detalhes -->
-                    <a href="{% url 'patients:detail' patient.pk %}"
-                        class="text-blue-600 hover:text-blue-800 flex items-center space-x-1">
-                        <i class="fas fa-eye"></i> <span>Ver</span>
-                    </a>
-
-                    <!-- Editar -->
-                    <a href="{% url 'patients:update' patient.pk %}"
-                        class="text-yellow-600 hover:text-yellow-800 flex items-center space-x-1">
-                        <i class="fas fa-edit"></i> <span>Editar</span>
-                    </a>
-
-                    <!-- Excluir -->
-                    <a href="{% url 'patients:delete' patient.pk %}"
-                        class="text-red-600 hover:text-red-800 flex items-center space-x-1">
-                        <i class="fas fa-trash"></i> <span>Excluir</span>
-                    </a>
-                </div>
-            </li>
-            {% empty %}
-            <li class="p-4 text-center text-gray-500">
-                Você ainda não possui pacientes cadastrados.
-            </li>
-            {% endfor %}
-        </ul>
-        <a href="{% url 'user:logout' %}"  class="pt-8 cursor-pointer hover:scale-120 inline-block">
-            <i class="fas fa-sign-out-alt"></i> Sair
-        </a>
     </div>
 </body>
 
