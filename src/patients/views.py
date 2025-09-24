@@ -5,6 +5,7 @@ from django.views.generic import (
     UpdateView,
     DeleteView,
 )
+from django.core.paginator import Paginator
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from .models import Patient
@@ -36,10 +37,27 @@ class PatientDetailView(LoginRequiredMixin, DetailView):
     model = Patient
     template_name = "patients/patient_detail.html"
     context_object_name = "patient"
+    paginate_by = 5
 
     def get_queryset(self):
         return Patient.objects.filter(user=self.request.user)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        patient = self.object
+
+        records = patient.psy_records.all().order_by('-record_number')
+
+        paginator = Paginator(records, self.paginate_by)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['records_page'] = page_obj
+        context['is_paginated'] = page_obj.has_other_pages()
+        context['page_obj'] = page_obj
+        context['paginator'] = paginator
+        
+        return context
 
 class PatientUpdateView(LoginRequiredMixin, UpdateView):
     model = Patient
