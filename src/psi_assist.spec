@@ -11,9 +11,11 @@ project_dir = Path(SPECPATH)
 django_files = []
 for root, dirs, files in os.walk(project_dir):
     # Ignorar diretórios desnecessários
-    dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', '.pytest_cache', 'node_modules']]
+    dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', '.pytest_cache', 'node_modules', 'db.sqlite3']]
     
     for file in files:
+        if file.endswith == '.sqlite3':
+            continue
         if file.endswith(('.py', '.html', '.css', '.js', '.json', '.txt', '.md')):
             file_path = os.path.join(root, file)
             rel_path = os.path.relpath(file_path, project_dir)
