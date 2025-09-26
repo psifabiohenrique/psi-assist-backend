@@ -6,8 +6,6 @@ from .models import User
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
-        # Inclua os campos customizados aqui para que apareçam no formulário.
-        # Como eles são blank=True e null=True no modelo, serão opcionais no formulário.
         fields = (
             "username",
             "email",
