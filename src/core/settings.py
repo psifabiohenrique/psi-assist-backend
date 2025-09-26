@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'django_coverage',
+
 ]
 
 MIDDLEWARE = [
@@ -59,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_coverage.middleware.CoverageMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -130,6 +133,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [ BASE_DIR / "static", ]
 
 # Media files
 MEDIA_URL = "media/"
@@ -148,8 +152,6 @@ LOGIN_REDIRECT_URL = 'patients:list'
 LOGOUT_REDIRECT_URL = 'user:login'
 
 
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [ BASE_DIR / "static", ]
 
 # Tailwindcss
 
