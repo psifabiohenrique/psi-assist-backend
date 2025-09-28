@@ -1,5 +1,6 @@
 import threading
 import io
+import os
 
 from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
@@ -15,6 +16,9 @@ from .models import PsyRecord
 from patients.models import Patient
 from .forms import PsyRecordForm
 
+from imageio_ffmpeg import get_ffmpeg_exe
+
+AudioSegment.converter = get_ffmpeg_exe()
 
 class PsyRecordCreateView(LoginRequiredMixin, CreateView):
     model = PsyRecord
