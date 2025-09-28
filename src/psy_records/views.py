@@ -1,5 +1,6 @@
 import threading
 import io
+import os
 
 from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
@@ -15,6 +16,11 @@ from .models import PsyRecord
 from patients.models import Patient
 from .forms import PsyRecordForm
 
+# caminho absoluto para o binário que você copiou
+FFMPEG_PATH = os.path.expanduser('~/bin/ffmpeg')
+
+# garante que o pydub use o binário correto
+AudioSegment.converter = FFMPEG_PATH
 
 class PsyRecordCreateView(LoginRequiredMixin, CreateView):
     model = PsyRecord
