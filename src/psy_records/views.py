@@ -16,11 +16,9 @@ from .models import PsyRecord
 from patients.models import Patient
 from .forms import PsyRecordForm
 
-# caminho absoluto para o binário que você copiou
-FFMPEG_PATH = os.path.expanduser('~/bin/ffmpeg')
+from imageio_ffmpeg import get_ffmpeg_exe
 
-# garante que o pydub use o binário correto
-AudioSegment.converter = FFMPEG_PATH
+AudioSegment.converter = get_ffmpeg_exe()
 
 class PsyRecordCreateView(LoginRequiredMixin, CreateView):
     model = PsyRecord
