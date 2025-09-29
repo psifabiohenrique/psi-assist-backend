@@ -9,3 +9,8 @@ class PatientForm(forms.ModelForm):
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'}),
         }
+
+class PatientSummaryForm(forms.ModelForm):
+    class Meta:
+        model = Patient
+        fields = ['objectives', 'clinical_demand', 'clinical_procedures', 'clinical_analysis', 'clinical_conclusion']

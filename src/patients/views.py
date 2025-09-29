@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from .models import Patient
-from .forms import PatientForm
+from .forms import PatientForm, PatientSummaryForm
 
 
 class PatientListView(LoginRequiredMixin, ListView):
@@ -36,6 +36,7 @@ class PatientCreateView(LoginRequiredMixin, CreateView):
 class PatientDetailView(LoginRequiredMixin, DetailView):
     model = Patient
     template_name = "patients/patient_detail.html"
+    form_class = PatientSummaryForm
     context_object_name = "patient"
     paginate_by = 5
 
