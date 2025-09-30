@@ -7,7 +7,7 @@ class PatientForm(forms.ModelForm):
         model = Patient
         fields = ['first_name', 'second_name', 'full_name', 'birth_date']
         widgets = {
-            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+            'birth_date': forms.DateInput(attrs={'type': 'date'}, format='%Y-%m-%d'),
         }
 
 class PatientSummaryForm(forms.ModelForm):
