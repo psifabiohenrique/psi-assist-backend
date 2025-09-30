@@ -8,9 +8,9 @@ class PsyRecord(models.Model):
         related_name="psy_records"
     )
     
-    record_number = models.PositiveIntegerField(editable=False)
-    date = models.DateField(default=timezone.now)
-    content = models.TextField(blank=True)
+    record_number = models.PositiveIntegerField('Número do registro', editable=False)
+    date = models.DateField('Data', default=timezone.now)
+    content = models.TextField('Conteúdo', blank=True)
     
     class Meta:
         unique_together = ('patient', 'record_number')
