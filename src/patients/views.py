@@ -1,7 +1,6 @@
 from django.views.generic import (
     ListView,
     CreateView,
-    DetailView,
     UpdateView,
     DeleteView,
 )
@@ -33,16 +32,20 @@ class PatientCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class PatientDetailView(LoginRequiredMixin, DetailView):
+class PatientDetailView(LoginRequiredMixin, UpdateView):
     model = Patient
     template_name = "patients/patient_detail.html"
     form_class = PatientSummaryForm
+    pk_url_kwarg = "pk"
     context_object_name = "patient"
     paginate_by = 5
 
+    def get_success_url(self):
+        return reverse_lazy("patients:detail", kwargs={"pk": self.object.pk})
+
     def get_queryset(self):
         return Patient.objects.filter(user=self.request.user)
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         patient = self.object
@@ -52,6 +55,8 @@ class PatientDetailView(LoginRequiredMixin, DetailView):
         paginator = Paginator(records, self.paginate_by)
         page_number = self.request.GET.get('page')
         page_obj = paginator.get_page(page_number)
+
+        context['form'] = kwargs.get('form') or PatientSummaryForm(instance=self.get_object())
 
         context['records_page'] = page_obj
         context['is_paginated'] = page_obj.has_other_pages()

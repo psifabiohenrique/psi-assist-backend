@@ -13,11 +13,11 @@ class Patient(models.Model):
     full_name = models.CharField('Nome completo', max_length=255, blank=True)
     birth_date = models.DateField('Data de nascimento')
 
-    objectives = models.TextField('Objetivos', blank=True, null=True)
-    clinical_demand = models.TextField('Demanda', blank=True, null=True)
-    clinical_procedures = models.TextField('Procedimentos', blank=True, null=True)
-    clinical_analysis = models.TextField('Análise', blank=True, null=True)
-    clinical_conclusion = models.TextField('Conclusões', blank=True, null=True)
+    objectives = models.TextField(verbose_name='Objetivos', blank=True, null=True)
+    clinical_demand = models.TextField(verbose_name='Demanda', blank=True, null=True)
+    clinical_procedures = models.TextField(verbose_name='Procedimentos', blank=True, null=True)
+    clinical_analysis = models.TextField(verbose_name='Análise', blank=True, null=True)
+    clinical_conclusion = models.TextField(verbose_name='Conclusões', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if not self.full_name:
