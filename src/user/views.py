@@ -1,3 +1,4 @@
+from django.http import HttpResponse, HttpRequest
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login, logout, get_user_model
@@ -11,7 +12,7 @@ from .forms import CustomUserCreationForm, CustomAuthenticationForm, UserUpdateF
 
 User = get_user_model()
 
-def signup_view(request):
+def signup_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
