@@ -23,5 +23,7 @@ RUN uv run python src/manage.py collectstatic --noinput
 
 EXPOSE 8000
 
+WORKDIR /app/src
+
 CMD ["uv", "run", "gunicorn","--bind",":8000","--workers","2","core.wsgi"]
 # CMD ["uv", "run", "src/manage.py", "runserver"]

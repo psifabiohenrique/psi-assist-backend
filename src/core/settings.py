@@ -30,6 +30,10 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [os.getenv("ALLOWED_HOSTS"), "*"]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://psi-assist.fly.dev/"
+]
+
 
 # Application definition
 
@@ -55,6 +59,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -134,6 +139,7 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [ BASE_DIR / "static", ]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = "media/"
@@ -162,5 +168,6 @@ CRISPY_TEMPLATE_PACK = "tailwind"
 # # HTTPS
 # SECURE_PROXY_SSL_HEADER = os.getenv("DEBUG", "True") == "True"
 # SECURE_SSL_REDIRECT = os.getenv("DEBUG", "True") == "True"
-# SESSION_COOKIE_SECURE = os.getenv("DEBUG", "True") == "True"
-# CSRF_COOKIE_SECURE = os.getenv("DEBUG", "True") == "True"
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = os.getenv("DEBUG", "False") == "True"
+CSRF_COOKIE_SECURE = os.getenv("DEBUG", "False") == "True"

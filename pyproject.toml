@@ -17,4 +17,5 @@ dependencies = [
     "pyinstaller>=6.16.0",
     "imageio-ffmpeg>=0.6.0",
     "gunicorn>=23.0.0",
+    "whitenoise>=6.11.0",
 ]

@@ -1,7 +1,6 @@
 .venv
 build/
 dist/
-htmlcov/media/
-staticfiles/
+htmlcov/
 .coveragerc
 psi_assist.spec
