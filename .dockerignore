@@ -1,0 +1,7 @@
+.venv
+build/
+dist/
+htmlcov/media/
+staticfiles/
+.coveragerc
+psi_assist.spec

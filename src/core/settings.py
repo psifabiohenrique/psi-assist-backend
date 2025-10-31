@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-default-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [os.getenv("ALLOWED_HOSTS"), "*"]
 
 
 # Application definition
@@ -157,3 +157,10 @@ LOGOUT_REDIRECT_URL = 'user:login'
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
+
+
+# # HTTPS
+# SECURE_PROXY_SSL_HEADER = os.getenv("DEBUG", "True") == "True"
+# SECURE_SSL_REDIRECT = os.getenv("DEBUG", "True") == "True"
+# SESSION_COOKIE_SECURE = os.getenv("DEBUG", "True") == "True"
+# CSRF_COOKIE_SECURE = os.getenv("DEBUG", "True") == "True"
