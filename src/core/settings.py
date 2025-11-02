@@ -171,3 +171,42 @@ CRISPY_TEMPLATE_PACK = "tailwind"
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = os.getenv("DEBUG", "False") == "True"
 CSRF_COOKIE_SECURE = os.getenv("DEBUG", "False") == "True"
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG', # Ou INFO para produção
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose' # Ou simple
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO', # Nível padrão para logs do Django
+            'propagate': False,
+        },
+        'psy_records': { # Adicione um logger para seu aplicativo específico
+            'handlers': ['console'],
+            'level': 'DEBUG', # Nível de debug para seu código
+            'propagate': False,
+        },
+        '': { # Logger raiz, captura tudo que não é explicitamente configurado
+            'handlers': ['console'],
+            'level': 'INFO', # Nível padrão para o resto da aplicação
+        }
+    }
+}
