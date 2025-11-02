@@ -11,11 +11,8 @@ dependencies = [
     "django-coverage>=1.2.4",
     "django-crispy-forms>=2.4",
     "dotenv>=0.9.9",
-    "ffmpeg-python>=0.2.0",
     "google-genai>=1.38.0",
-    "pydub>=0.25.1",
     "pyinstaller>=6.16.0",
-    "imageio-ffmpeg>=0.6.0",
     "gunicorn>=23.0.0",
     "whitenoise>=6.11.0",
 ]
