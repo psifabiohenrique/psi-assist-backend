@@ -6,6 +6,7 @@
 app = 'psi-assist'
 primary_region = 'gru'
 console_command = '/code/manage.py shell'
+kill_timeout = 300
 
 [build]
 
