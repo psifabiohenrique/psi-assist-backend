@@ -92,12 +92,25 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('NAME_DB'),  # Nome do banco de dados que você criou
+            'USER': os.getenv('USER_DB'),        # Nome do usuário que você criou
+            'PASSWORD': os.getenv('PASSWORD_DB'), # Senha do usuário
+            'HOST': os.getenv('HOST_DB'),          # Onde o PostgreSQL está rodando (geralmente localhost)
+            'PORT': '',
+            'OPTIONS': {'sslmode': os.getenv('SSLMODE_DB'), 'channel_binding': os.getenv('CHANNEL_BINDING_DB')}                   # Porta do PostgreSQL (vazio usa a padrão 5432)
+        }
+    }
 
 
 # Password validation
