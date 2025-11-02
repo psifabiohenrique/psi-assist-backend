@@ -389,9 +389,6 @@ def process_audio_with_gemini(
         )
 
         del part_list
-        
-
-        print(transcription_response)
 
         import re
 
