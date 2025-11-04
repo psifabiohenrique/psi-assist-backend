@@ -59,11 +59,11 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".webm")
             try:
                 logger.info('Iniciando o loop nos chunks')
-                loop = 0
+                # loop = 0
                 for chunk in audio_file.chunks():
                     temp_file.write(chunk)
-                    logger.info(f'{loop} ')
-                    loop += 1
+                    # logger.info(f'{loop} ')
+                    # loop += 1
                 temp_file.close()
 
                 logger.info("Arquivo temporário finalizado")
@@ -89,7 +89,7 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
                 args=(
                     self.object.id,
                     self.object.patient.id,
-                    audio_file,
+                    temp_file,
                     self.request.user.api_key,
                     PROMPT_TRANSCRIPTION,
                     self.request.user.system_prompt,
