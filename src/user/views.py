@@ -14,11 +14,12 @@ User = get_user_model()
 
 def signup_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect("patients:list")
+        # form = CustomUserCreationForm(request.POST)
+        # if form.is_valid():
+        #     user = form.save()
+        #     login(request, user)
+        #     return redirect("patients:list")
+        return redirect('user:login')
     else:
         form = CustomUserCreationForm()
     return render(request, "user/signup.html", {"form": form, "title": "Cadastrar - Psi Assist"})

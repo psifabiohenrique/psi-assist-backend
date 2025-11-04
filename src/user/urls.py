@@ -10,7 +10,7 @@ from .views import (
 app_name = "user"
 
 urlpatterns = [
-    # path("signup/", signup_view, name="signup"),
+    path("signup/", signup_view, name="signup"),
     path("login/", CustomLoginView.as_view(), name="login"),
     path("logout/", logout_view, name="logout"),
     path("update/", UserUpdateView.as_view(), name="update"),
