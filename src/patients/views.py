@@ -18,7 +18,11 @@ class PatientListView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return Patient.objects.filter(user=self.request.user).order_by('full_name')
+        queryset = Patient.objects.filter(user=self.request.user).order_by('full_name')
+        search = self.request.GET.get("q")
+        if search:
+            queryset = queryset.filter(full_name__icontains=search)
+        return queryset
 
 
 class PatientCreateView(LoginRequiredMixin, CreateView):

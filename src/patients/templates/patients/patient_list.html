@@ -31,14 +31,27 @@
 
             {% if patients %}
             <ul class="space-y-3 mb-6">
+                <!-- Search bar -->
+                <form method="get" id="search-form" class="relative w-full max-w-md mx-auto">
+                    <input type="text" id="search-input" name="q" placeholder="Buscar paciente..."
+                        value="{{ request.GET.q }}"
+                        class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    {% if request.GET.q %}
+                    <button type="button" id="clear-button"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none">X</button>
+                    {% endif %}
+                </form>
+
+                <!-- Patient list -->
                 {% for patient in patients %}
                 <li
                     class="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
                     <div class="mb-2 sm:mb-0">
-                        <a href="{% url 'patients:detail' patient.pk %}" >
+                        <a href="{% url 'patients:detail' patient.pk %}">
                             <span class="font-semibold text-gray-800 hover:text-blue-800">{{ patient.full_name }}</span>
                         </a>
-                        <span class="text-gray-500 text-sm block sm:inline">({{ patient.birth_date|date:"d/m/Y" }})</span>
+                        <span class="text-gray-500 text-sm block sm:inline">({{ patient.birth_date|date:"d/m/Y"
+                            }})</span>
                     </div>
                     <div class="flex items-center space-x-4 text-sm">
                         <!-- Ver Detalhes -->
@@ -68,7 +81,8 @@
             <div class="flex flex-col sm:flex-row items-center justify-between border-t pt-4 mt-4">
                 <div class="text-sm text-gray-600 mb-2 sm:mb-0">
                     Mostrando <span class="font-semibold">{{ page_obj.start_index }}</span> a <span
-                        class="font-semibold">{{ page_obj.end_index }}</span> de <span class="font-semibold">{{ paginator.count }}</span> pacientes
+                        class="font-semibold">{{ page_obj.end_index }}</span> de <span class="font-semibold">{{
+                        paginator.count }}</span> pacientes
                 </div>
 
                 <div class="flex space-x-1">
@@ -121,6 +135,36 @@
             </a>
         </div>
     </div>
+
+    <script>
+        const form = document.getElementById('search-form');
+        const input = document.getElementById('search-input');
+        const clearButton = document.getElementById('clear-button');
+
+        // Focus search input after reload
+        window.addEventListener('load', () => {
+            input.focus();
+
+            const val = input.value;
+            input.value = ''
+            input.value = val
+        })
+
+        // Automatically submit search
+        input.addEventListener('input', () => {
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(() => {
+                document.getElementById('search-form').submit();
+            }, 400)
+        })
+
+        if (clearButton) {
+            clearButton.addEventListener('click', () => {
+                input.value = '';
+                form.submit();
+            })
+        }
+    </script>
 </body>
 
 </html>
