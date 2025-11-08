@@ -35,7 +35,9 @@
                 <li
                     class="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow duration-200">
                     <div class="mb-2 sm:mb-0">
-                        <span class="font-semibold text-gray-800">{{ patient.full_name }}</span>
+                        <a href="{% url 'patients:detail' patient.pk %}" >
+                            <span class="font-semibold text-gray-800 hover:text-blue-800">{{ patient.full_name }}</span>
+                        </a>
                         <span class="text-gray-500 text-sm block sm:inline">({{ patient.birth_date|date:"d/m/Y" }})</span>
                     </div>
                     <div class="flex items-center space-x-4 text-sm">
