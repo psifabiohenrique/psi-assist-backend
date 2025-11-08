@@ -178,11 +178,11 @@
                             <i class="fas fa-robot"></i>
                             <span>Processar com IA e Salvar</span>
                         </button>
-                        <button type="button" onclick="window.audioSubmitter.submitWithoutAudio()"
+                        <!-- <button type="button" onclick="window.audioSubmitter.submitWithoutAudio()"
                             class="btn-secondary bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center space-x-2 hover:scale-105 transform">
                             <i class="fas fa-file-alt"></i>
                             <span>Salvar Apenas Texto</span>
-                        </button>
+                        </button> -->
                         <button type="button" onclick="window.audioRecorderUI.resetUI()"
                             class="btn-secondary bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center space-x-2 hover:scale-105 transform">
                             <i class="fas fa-redo"></i>
@@ -231,13 +231,21 @@
                 </div>
                 {% endif %}
 
+                {% if record %}
                 <div class="button-group">
-                    <button type="submit"
-                        class="btn-success bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center space-x-2 hover:scale-105 transform">
+                    <button type="submit" class="btn-success bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center space-x-2 hover:scale-105 transform">
                         <i class="fas fa-save"></i>
                         <span>Salvar Prontuário</span>
                     </button>
                 </div>
+                {% else %}
+                <div class="button-group">
+                    <button type="button" class="btn-success bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center space-x-2 hover:scale-105 transform" onclick="window.audioSubmitter.submitWithoutAudio()">
+                        <i class="fas fa-save"></i>
+                        <span>Salvar Prontuário</span>
+                    </button>
+                </div>
+                {% endif %}
             </form>
             <div id="submit-status" class="submit-status hidden mt-4 p-4 rounded-lg font-semibold"></div>
         </div>
