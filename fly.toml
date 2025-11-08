@@ -22,7 +22,7 @@ kill_timeout = 300
   processes = ['app']
 
 [[vm]]
-  memory = '512'
+  memory = '1024'
   cpu_kind = 'shared'
   cpus = 1
 
