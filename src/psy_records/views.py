@@ -13,13 +13,15 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from google import genai
-from google.genai import types
+from google.genai import types, errors
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
 from .models import PsyRecord
 from patients.models import Patient
 from .forms import PsyRecordForm
 
+load_dotenv()
 logger = logging.getLogger(__name__)
 
 class PsyRecordCreateView(LoginRequiredMixin, CreateView):
@@ -384,9 +386,12 @@ def process_audio_with_gemini(
         del audio_bytes[:]
 
         logger.info("Enviando requisição de transcrição para o gemini")
-        transcription_response = client.models.generate_content(
-            model="gemini-2.5-flash", contents=[system_prompt_transcription, part_list]
-        )
+        try:
+            transcription_response = client.models.generate_content(
+                model=os.getenv('GEMINI_MODEL', "gemini-2.5-flash"), contents=[system_prompt_transcription, part_list]
+            )
+        except errors.APIError as e:
+            return {"psy_record": f"Erro na transcrição do áudio, código: {e.code}. \n\n {e.message}"}
 
         del part_list
 
@@ -395,18 +400,23 @@ def process_audio_with_gemini(
         logger.info("Transcrição concluida")
         patient_data_json = json.dumps(patient_data, ensure_ascii=False)
         logger.info("Iniciando a produção do prontuário")
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=[
-                system_prompt_summary,
-                patient_data_json,
-                transcription_response.text,
-            ],
-            config={
-                "response_mime_type": "application/json",
-                "response_schema": ResultPsySummaryData,
-            }
-        )
+
+        try:
+            response = client.models.generate_content(
+                model=os.getenv('GEMINI_MODEL', "gemini-2.5-flash"),
+                contents=[
+                    system_prompt_summary,
+                    patient_data_json,
+                    transcription_response.text,
+                ],
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": ResultPsySummaryData,
+                }
+            )
+        except errors.APIError as e:
+            return {"psy_record": f"Erro no processamento do prontuário, código: {e.code}. \n\n {e.message}"}
+
         logger.info("Prontuário escrito")
         update_text = response.text
         json_match = re.search(r"\{.*\}", update_text, re.DOTALL)
