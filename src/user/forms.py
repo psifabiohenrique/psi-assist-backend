@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User
+from .models import User, GEMINI_MODEL_CHOICES
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -13,6 +13,7 @@ class CustomUserCreationForm(UserCreationForm):
             "last_name",
             "api_key",
             "system_prompt",
+            'gemini_model'
         )
 
 
@@ -26,7 +27,7 @@ class UserUpdateForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email", "system_prompt", "api_key"]
+        fields = ["first_name", "last_name", "email", "system_prompt", "api_key", "gemini_model"]
         widgets = {
             "api_key": forms.PasswordInput(
                 render_value=True,
