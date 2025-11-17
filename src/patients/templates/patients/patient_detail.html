@@ -73,25 +73,11 @@
         </div>
 
     <div class="p-6 shadow-[0_-6px_10px_-3px_rgba(0,0,0,0.12)] rounded-lg flex flex-row justify-between">
-        <!-- Campos de resumo do paciente -->
-        <div class="bg-white p-6 border rounded-xl shadow-sm mb-6 min-w-2xl">
-            <form method="post">
-                {% csrf_token %}
-                {{ form|crispy }}
-                
-                <!-- Botões -->
-                <div class="flex space-x-4 pt-4">
-                    <button type="submit" 
-                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2 hover:scale-105 transform">
-                        <i class="fas fa-save"></i>
-                        <span>Salvar</span>
-                    </button>
-                </div>
-            </form>
-        </div>
+
+
 
         <!-- Prontuários -->
-        <div class="bg-white p-6 border rounded-xl shadow-sm mb-6 min-w-lg">
+        <div class="bg-white p-6 border rounded-xl shadow-sm mb-6 min-w-lg w-full">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-gray-800 flex items-center space-x-2">
                     <i class="fas fa-file-medical text-blue-600"></i>
