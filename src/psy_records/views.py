@@ -96,6 +96,7 @@ class PsyRecordCreateView(LoginRequiredMixin, CreateView):
                     PROMPT_TRANSCRIPTION,
                     self.request.user.system_prompt,
                     patient_data,
+                    self.request.user.gemini_model
                 ),
                 daemon=True,
             ).start()
@@ -189,6 +190,7 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
             user = request.user
             api_key = user.api_key
             system_prompt_summary = user.system_prompt
+            gemini_model = user.gemini_model
 
 
             audio_file = request.FILES["reprocess_audio"]
@@ -234,6 +236,7 @@ class PsyRecordUpdateView(LoginRequiredMixin, UpdateView):
                     PROMPT_TRANSCRIPTION,
                     system_prompt_summary,
                     patient_data,
+                    gemini_model
                 ),
                 daemon=True,
             ).start()
@@ -304,6 +307,7 @@ def _process_audio_background(
     system_prompt_transcription: str,
     system_prompt_summary: str,
     patient_data: PsySummaryData,
+    gemini_model: str
 ):
     """Executa o processamento com Gemini em background"""
 
@@ -321,17 +325,20 @@ def _process_audio_background(
                 system_prompt_transcription,
                 system_prompt_summary,
                 patient_data,
+                gemini_model
             )
             patient = Patient.objects.get(id=patient_id)
             record = PsyRecord.objects.get(id=record_id)
             if processed_content:
-                patient.objectives = processed_content.get("objectives")
-                patient.clinical_demand = processed_content.get("clinical_demand")
-                patient.clinical_procedures = processed_content.get("clinical_procedures")
-                patient.clinical_analysis = processed_content.get("clinical_analysis")
-                patient.clinical_conclusion = processed_content.get("clinical_conclusion")
+                # patient.objectives = processed_content.get("objectives")
+                # patient.clinical_demand = processed_content.get("clinical_demand")
+                # patient.clinical_procedures = processed_content.get("clinical_procedures")
+                # patient.clinical_analysis = processed_content.get("clinical_analysis")
+                # # patient.clinical_conclusion = processed_content.get("clinical_conclusion")
 
-                record.content = processed_content.get("psy_record")
+                # record.content = processed_content.get("psy_record")
+
+                record.content = processed_content
             else:
                 record.content = "⚠ Não foi possível processar o áudio."
             patient.save(
@@ -364,6 +371,7 @@ def process_audio_with_gemini(
     system_prompt_transcription: str,
     system_prompt_summary: str,
     patient_data: PsySummaryData,
+    gemini_model: str = 'gemini-2.5-flash'
 ) -> ResultPsySummaryData:
     """
     Processa o arquivo de áudio usando Google Gemini com upload inline
@@ -388,45 +396,46 @@ def process_audio_with_gemini(
         logger.info("Enviando requisição de transcrição para o gemini")
         try:
             transcription_response = client.models.generate_content(
-                model=os.getenv('GEMINI_MODEL', "gemini-2.5-flash"), contents=[system_prompt_transcription, part_list]
+                model=gemini_model, contents=[system_prompt_summary, part_list]
             )
         except errors.APIError as e:
-            return {"psy_record": f"Erro na transcrição do áudio, código: {e.code}. \n\n {e.message}"}
+            # return {"psy_record": f"Erro na transcrição do áudio, código: {e.code}. \n\n {e.message}"}
+            return f"Erro na transcrição do áudio, código: {e.code}. \n\n {e.message}"
 
         del part_list
 
-        import re
+        # import re
 
-        logger.info("Transcrição concluida")
-        patient_data_json = json.dumps(patient_data, ensure_ascii=False)
-        logger.info("Iniciando a produção do prontuário")
+        # logger.info("Transcrição concluida")
+        # patient_data_json = json.dumps(patient_data, ensure_ascii=False)
+        # logger.info("Iniciando a produção do prontuário")
 
-        try:
-            response = client.models.generate_content(
-                model=os.getenv('GEMINI_MODEL', "gemini-2.5-flash"),
-                contents=[
-                    system_prompt_summary,
-                    patient_data_json,
-                    transcription_response.text,
-                ],
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": ResultPsySummaryData,
-                }
-            )
-        except errors.APIError as e:
-            return {"psy_record": f"Erro no processamento do prontuário, código: {e.code}. \n\n {e.message}"}
+        # try:
+        #     response = client.models.generate_content(
+        #         model=os.getenv('GEMINI_MODEL', "gemini-2.5-flash"),
+        #         contents=[
+        #             system_prompt_summary,
+        #             patient_data_json,
+        #             transcription_response.text,
+        #         ],
+        #         config={
+        #             "response_mime_type": "application/json",
+        #             "response_schema": ResultPsySummaryData,
+        #         }
+        #     )
+        # except errors.APIError as e:
+        #     return {"psy_record": f"Erro no processamento do prontuário, código: {e.code}. \n\n {e.message}"}
 
-        logger.info("Prontuário escrito")
-        update_text = response.text
-        json_match = re.search(r"\{.*\}", update_text, re.DOTALL)
-        if json_match:
-            processed_content = json.loads(json_match.group())
-        else:
-            processed_content = {"psy_record": update_text}
+        # logger.info("Prontuário escrito")
+        # update_text = response.text
+        # json_match = re.search(r"\{.*\}", update_text, re.DOTALL)
+        # if json_match:
+        #     processed_content = json.loads(json_match.group())
+        # else:
+        #     processed_content = {"psy_record": update_text}
 
         print("### Processamento concluído ###")
-        return processed_content
+        return transcription_response.text
 
     except Exception as e:
         print(f"Erro ao processar áudio com Gemini: {str(e)}")
